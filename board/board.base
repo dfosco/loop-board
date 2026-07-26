@@ -1,0 +1,119 @@
+filters:
+  and:
+    - file.inFolder("tasks")
+    - file.ext == "md"
+formulas:
+  updated: file.mtime.relative()
+properties:
+  status:
+    displayName: Status
+  order:
+    displayName: "#"
+  pr:
+    displayName: PR
+  files_changed:
+    displayName: Files
+  status_since:
+    displayName: Since
+  question:
+    displayName: Question
+  answer:
+    displayName: Answer
+  done_date:
+    displayName: Done
+  formula.updated:
+    displayName: Updated
+views:
+  - type: table
+    name: Board
+    filters:
+      and:
+        - status != "Done"
+        - status != "Backlog"
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - order
+      - file.name
+      - pr
+      - formula.updated
+      - status_since
+      - status
+    sort:
+      - property: order
+        direction: ASC
+    columnSize:
+      file.name: 466
+      note.pr: 427
+  - type: table
+    name: Mine
+    filters:
+      or:
+        - status == "Ready to Test"
+        - status == "Testing"
+        - status == "Needs Changes"
+        - status == "Ready to Merge"
+    order:
+      - status
+      - order
+      - file.name
+      - pr
+      - files_changed
+      - formula.updated
+    sort:
+      - property: status
+        direction: DESC
+    columnSize:
+      note.status: 135
+  - type: table
+    name: Needs input
+    filters: status == "Needs Input"
+    order:
+      - file.name
+      - question
+      - answer
+      - status_since
+      - pr
+  - type: table
+    name: To do
+    filters: status == "To Do"
+    order:
+      - order
+      - file.name
+  - type: table
+    name: Backlog
+    filters: status == "Backlog"
+    order:
+      - order
+      - file.name
+  - type: table
+    name: Done
+    filters: status == "Done"
+    groupBy:
+      property: done_date
+      direction: DESC
+    order:
+      - file.name
+      - pr
+      - done_date
+    summaries:
+      pr: Filled
+  - type: table
+    name: Broken
+    filters:
+      and:
+        - status != "Backlog"
+        - status != "To Do"
+        - status != "In Progress"
+        - status != "Needs Input"
+        - status != "Agent Finished"
+        - status != "Ready to Test"
+        - status != "Testing"
+        - status != "Needs Changes"
+        - status != "Ready to Merge"
+        - status != "Done"
+    order:
+      - file.name
+      - status
+      - formula.updated

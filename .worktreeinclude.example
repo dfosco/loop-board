@@ -1,0 +1,13 @@
+# Gitignored files copied into every new worktree.
+# .gitignore syntax. Only files that match AND are gitignored get copied.
+# A worktree is a fresh checkout, so anything not tracked and not listed here is absent.
+
+.env
+.env.local
+.env.development.local
+
+# Uncomment what this repo actually needs. Keep this list short:
+# every entry is copied into every worktree.
+# .npmrc
+# .tool-versions
+# web/.env.local
