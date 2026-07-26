@@ -93,7 +93,9 @@ the repo doesn't have one.
 | Test    | `npm test` |
 | Lint    | `npm run lint` |
 
-Gitignored files a fresh worktree needs are listed in `.worktreeinclude` at the repo root.
+Gitignored files a fresh worktree needs are listed in `.worktreeinclude` at the repo root. The loop
+copies them into each new worktree before the worker starts, since a worktree is otherwise a clean
+checkout.
 
 ## Running the app to look at it
 

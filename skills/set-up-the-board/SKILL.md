@@ -22,9 +22,10 @@ When you're done, all of these exist and the owner has seen them:
 
 1. `<board>/setup.md` — their answers, in the section order of the shipped template
 2. `<board>/memory.md`, `<board>/tasks/`, `<board>/templates/` — copied from this repo, memory empty
-3. `<repo>/.claude/agents/task-worker.md` and `<repo>/.claude/skills/babysit-prs/SKILL.md`
-4. `<repo>/.worktreeinclude`, and `.claude/worktrees/` in `<repo>/.gitignore`
-5. A one-screen summary of what you set and what they still have to do by hand
+3. `<repo>/.github/agents/task-worker.agent.md` and `<repo>/.github/skills/babysit-prs/SKILL.md`
+4. `<board>/loop.sh` and `<board>/dispatch-worker.sh` from this repo's `board/`, kept executable
+5. `<repo>/.worktreeinclude`, and `.copilot/worktrees/` in `<repo>/.gitignore`
+6. A one-screen summary of what you set and what they still have to do by hand
 
 ## Interview
 
@@ -95,15 +96,19 @@ alone; no manual testing means the loop sets `Ready to Merge` itself and `Testin
 
 Run these and report what failed rather than fixing it silently:
 
-- The agent runner supports worktree isolation for subagents, and its version is recent enough that a
-  command resolving outside the worktree fails instead of running in the main checkout. The whole
-  "never touch my checkout" guarantee rests on that.
+- `copilot` is installed and authenticated (`copilot --version`; `/login` inside a session if not),
+  and `board/dispatch-worker.sh` and `board/loop.sh` are present and executable.
+- The worker confinement holds: `dispatch-worker.sh` runs the worker with its working directory in the
+  worktree and no `--allow-all-paths`, so a command resolving into the main checkout is refused. The
+  whole "never touch my checkout" guarantee rests on that. For OS-level shell confinement too, set
+  `WORKER_EXTRA_FLAGS="--experimental --sandbox"`.
 - The forge CLI is installed and authenticated.
-- `.claude/worktrees/` is in the repo's `.gitignore`.
+- `.copilot/worktrees/` is in the repo's `.gitignore`.
 - `git remote set-head origin -a` has been run, so worktrees branch from the real default branch
   rather than a stale cached one.
-- The board path is readable by the agent session — on Claude Code that means `--add-dir <board>` or
-  `permissions.additionalDirectories`.
+- The board path is readable and writable by the loop session — pass `--add-dir <board>`, or persist
+  it in `allowed_directories` in `~/.copilot/permissions-config.json` (use the full path; `~` may not
+  expand).
 
 ## Finish
 

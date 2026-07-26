@@ -1,6 +1,6 @@
 ---
 name: babysit-prs
-description: Use when working the task board for one pass, normally from inside a self-paced /loop, or when checking whether anything on the board can move without the owner.
+description: Use when working the task board for one pass, normally from inside the self-paced loop (`board/loop.sh`), or when checking whether anything on the board can move without the owner.
 ---
 
 Do one pass of the board.
@@ -18,8 +18,10 @@ Read every note's frontmatter. Open the body only for notes you're going to act 
 
 Three things the protocol relies on that are yours to enforce:
 
-- Dispatch every piece of code work to the `task-worker` subagent. You read the board, run the forge
-  CLI, and write frontmatter. You do not edit code, and you do not touch the repository working tree.
+- Dispatch every piece of code work to a `task-worker`, by running `<board>/dispatch-worker.sh`. It
+  cuts the isolated worktree, runs the worker in it, copies in the `.worktreeinclude` files, and hands
+  back the worker's `RESULT:` block on stdout. You read the board, run the forge CLI, and write
+  frontmatter. You do not edit code yourself, and you do not touch the repository working tree.
 - You are the only writer to the board and to `memory.md`. Workers report back to you and you record
   it. Never ask a worker to write a task note or a memory entry.
 - Every dispatch opens with a `## Memory` block: `## Preferences`, `## Patterns to avoid`, and the
@@ -44,3 +46,13 @@ records nothing is the normal case.
 
 Finish the pass with one line: what moved, and what you're waiting on. Add a second line only if
 memory changed, saying what you learned, dropped, or graduated.
+
+Then, as the very last line of your reply, print the loop driver's control line — the protocol's
+"When to stop" section says which:
+
+- `LOOP: stop` when the stop condition holds and nothing can move without the owner.
+- `LOOP: wait <seconds>` otherwise, choosing the delay by how live the board is: short while a PR is
+  active, longer once things go quiet.
+
+`board/loop.sh` reads that line to decide whether to sleep and run again or exit. When you're running
+this skill by hand for a single pass, the line is harmless — just report the pass.

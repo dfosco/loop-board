@@ -1,4 +1,4 @@
-# Gitignored files copied into every new worktree.
+# Gitignored files the loop copies into every new worktree (via board/dispatch-worker.sh).
 # .gitignore syntax. Only files that match AND are gitignored get copied.
 # A worktree is a fresh checkout, so anything not tracked and not listed here is absent.
 

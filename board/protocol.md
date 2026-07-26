@@ -85,8 +85,12 @@ or I come back to a wall of them.
 The main checkout is mine. It is where I test and decide what I want changed next. Nothing in this
 process writes to it.
 
-- Every task runs in a worker with `isolation: worktree` in its frontmatter. Each worker gets its
-  own temporary worktree, removed automatically when it finishes without changes.
+- Every task runs in its own worker, and every worker gets its own temporary git worktree. The loop
+  dispatches through `<board>/dispatch-worker.sh`, which cuts the worktree, runs the worker confined
+  to it, and removes it when the worker finishes without changes.
+- The worker is confined to its worktree: it runs as its own session scoped to that directory, so a
+  command that resolves into my checkout is refused rather than run. That confinement is the guarantee
+  the whole process rests on.
 - Worktrees branch from `origin/HEAD`, not from whatever branch I have checked out. My in-progress
   local state never leaks into a task, and a task's edits never appear in my tree.
 - Never configure a worktree to base off local `HEAD`.
@@ -471,12 +475,14 @@ Stop when nothing on the board can move without me. All of these must hold:
 - Every remaining note is `Ready to Test`, `Testing`, `Backlog`, `Done`, or `Needs Input` with an
   empty `answer`
 
-Say what you're waiting on in one line, then end the loop by calling `ScheduleWakeup` with
-`stop: true`.
+Say what you're waiting on in one line, then end the loop: print `LOOP: stop` as the last line of the
+pass. `board/loop.sh` reads that and exits.
 
 Keep going otherwise. A quiet pass is not a reason to stop. `Agent Finished` is still actionable while
-checks are running, so take a short wakeup and look again. A `Needs Input` note whose `answer` I've
-filled in is actionable immediately.
+checks are running, so ask for a short delay — `LOOP: wait <seconds>` as the last line — and look
+again. A `Needs Input` note whose `answer` I've filled in is actionable immediately.
 
-This only works in self-paced mode, so run bare `/loop` with no interval. A fixed-interval loop is a
-cron job: it runs until stopped by hand or until it expires, and can't end itself.
+The delay and the stop are mine to choose each pass, which is why the loop is driven by
+`board/loop.sh` rather than a fixed interval. A fixed-interval loop — Copilot's own `/loop`, which is
+an alias of `/every` — is a cron job: it runs until stopped by hand or until it expires, and can't end
+itself.
