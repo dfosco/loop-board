@@ -18,13 +18,12 @@ Clone it, and install the onboarding skill so you can invoke it:
 
 ```bash
 git clone https://github.com/<you>/loop-board ~/loop-board
-mkdir -p ~/.claude/skills
-cp -R ~/loop-board/skills/set-up-the-board ~/.claude/skills/
+mkdir -p ~/.copilot/skills
+cp -R ~/loop-board/skills/set-up-the-board ~/.copilot/skills/
 ```
 
-**Restart your agent session now.** The file watcher only covers directories that existed when the
-session started, so a brand-new `skills` directory isn't picked up in the session you created it from.
-If the skill seems not to exist, this is why.
+**Reload skills now.** Run `/skills reload` in a running session, or start a fresh one — a brand-new
+skill isn't picked up in the session you created it from. If the skill seems not to exist, this is why.
 
 Then, from inside the repo you want it to work on:
 
@@ -32,23 +31,24 @@ Then, from inside the repo you want it to work on:
 /set-up-the-board
 ```
 
-It interviews you in four rounds and writes your `setup.md` from the answers, then puts the loop skill
-and the worker where your repo expects them. Defaults are supplied for everything, so "defaults are
-fine" is a complete answer. The round that matters most is the second one, which asks how *you* know a
-change is ready to look at — checks green, a review too, a bot that posts a comment — because that
-single answer decides what the loop waits for and what it's allowed to merge.
+It interviews you in four rounds and writes your `setup.md` from the answers, then puts the loop skill,
+the worker, and the two driver scripts where your repo expects them. Defaults are supplied for
+everything, so "defaults are fine" is a complete answer. The round that matters most is the second one,
+which asks how *you* know a change is ready to look at — checks green, a review too, a bot that posts a
+comment — because that single answer decides what the loop waits for and what it's allowed to merge.
 
-To do it by hand instead: copy `board/` to `~/board`, copy `agents/task-worker.md` to
-`<your-repo>/.claude/agents/`, copy `skills/babysit-prs/` to `<your-repo>/.claude/skills/`, and edit
-`board/setup.md`. Restart the session afterwards, for the same reason as above.
+To do it by hand instead: copy `board/` to `~/board` (keeping `loop.sh` and `dispatch-worker.sh`
+executable), copy `agents/task-worker.agent.md` to `<your-repo>/.github/agents/`, copy
+`skills/babysit-prs/` to `<your-repo>/.github/skills/`, and edit `board/setup.md`. Reload skills
+afterwards, for the same reason as above.
 
 ### Requirements
 
-- An agent runner that supports **worktree-isolated subagents**, recent enough that a command
-  resolving outside the worktree fails rather than running in your main checkout. The whole "never
-  touch my checkout" guarantee rests on that check.
+- **GitHub Copilot CLI** (`copilot`), installed and authenticated. The worker runs as its own
+  `copilot` session scoped to a git worktree, so a command resolving into your main checkout is refused
+  rather than run — the whole "never touch my checkout" guarantee rests on that confinement.
 - A forge CLI, installed and authenticated (`gh` for GitHub).
-- `.claude/worktrees/` in your repo's `.gitignore`.
+- `.copilot/worktrees/` in your repo's `.gitignore`.
 - `git remote set-head origin -a`, so worktrees branch from the real default branch rather than a
   stale cached one.
 - Optionally Obsidian, for a nicer view of the board. Not required — see
@@ -56,17 +56,18 @@ To do it by hand instead: copy `board/` to `~/board`, copy `agents/task-worker.m
 
 ## Running it
 
+From the repo root:
+
 ```bash
-claude --add-dir ~/board
+BOARD=~/board ~/board/loop.sh
 ```
 
-```
-/loop /babysit-prs
-```
-
-No interval, on purpose: a fixed-interval loop is a cron job that can't end itself. Bare `/loop` is
-self-paced and stops when the board says nothing can move. Watch the first pass before you background
-it — the review gate is the part most likely to be subtly wrong.
+`loop.sh` runs one board pass at a time with `copilot -p`, then paces itself: each pass ends by telling
+the driver to wait a chosen interval, or to stop once the board says nothing can move without you. It's
+a script rather than Copilot's `/loop` because `/loop` is an alias of `/every` — a fixed interval that
+can't end itself, the cron job this system is built to avoid. Watch the first pass
+(`ONCE=1 ~/board/loop.sh`) before you background it — the review gate is the part most likely to be
+subtly wrong.
 
 Full details in [reference/running-it.md](reference/running-it.md).
 
@@ -78,7 +79,7 @@ Three layers, each doing one thing:
 | --- | --- | --- |
 | **Protocol** (`board/protocol.md`) | the rules | — |
 | **Loop** (`skills/babysit-prs`) | reads the board, runs the forge CLI, writes frontmatter, dispatches | writes code, touches a working tree |
-| **Worker** (`agents/task-worker.md`) | writes code in its own worktree, reports back | touches the board, talks to you |
+| **Worker** (`agents/task-worker.agent.md`) | writes code in its own worktree, reports back | touches the board, talks to you |
 
 The board is a folder of markdown files, one per task, with `status` in the frontmatter. Ten statuses,
 and each one names who's allowed to set it. Three are yours alone — `Testing`, `Needs Changes`,
@@ -96,6 +97,8 @@ board/
   protocol.md          the rules; shared, don't edit per-project
   setup.md             your answers; the only file that varies
   memory.md            what the process has learned (starts empty)
+  loop.sh              the self-paced loop driver
+  dispatch-worker.sh   cuts a worktree and runs one worker in it
   board.base           optional Obsidian views
   templates/           new-task templates, with and without Templater
   tasks/               one note per task
@@ -103,7 +106,7 @@ skills/
   set-up-the-board/    the onboarding interview
   babysit-prs/         one pass of the protocol
 agents/
-  task-worker.md       the worktree-isolated worker
+  task-worker.agent.md the worktree-isolated worker
 reference/
   design-notes.md      why each piece is shaped this way
   running-it.md        starting, watching, stopping, notifications, gotchas
@@ -132,6 +135,8 @@ says so. It doesn't invent a quality bar, so make sure you have one of your own.
 
 - [reference/design-notes.md](reference/design-notes.md) — why one note per task, why the board lives
   outside the repo, why memory has caps, why entries graduate into work
+- [GitHub Copilot CLI docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/overview)
+  — custom agents, skills, hooks, and the flags the scripts lean on
 - [Loop engineering: getting started with loops](https://claude.com/blog/getting-started-with-loops) —
   the four-rung model this sits on
 

@@ -35,15 +35,21 @@ The same reasoning appears again a layer down: the loop is the *only* writer to 
 
 ## The board lives outside the repo
 
-Background sessions relocate into an isolated worktree before editing files, which is right for code
-and wrong for a board. An absolute path outside the repo is immune to that. It also keeps your
-checkout clean for testing, and handles a backlog that spans repositories.
+Work happens in throwaway worktrees, and the board must not. If the board lived inside the repo it
+would be absent from a fresh worktree, or shift under the loop's feet when a task is cut. An absolute
+path outside the repo is immune to that. It also keeps your checkout clean for testing, and handles a
+backlog that spans repositories.
 
 ## The main checkout is yours
 
 Every task runs in a worktree branched from `origin/HEAD` — not from whatever you have checked out.
 Your half-finished local state never leaks into a task, and a task's edits never appear in your tree
 while you're testing in it.
+
+Copilot has no per-subagent worktree, so `dispatch-worker.sh` builds this out of a real `git worktree`
+and a separate `copilot` session scoped to it: run without `--allow-all-paths`, a command that resolves
+into your checkout is refused rather than run. The guarantee is enforced by the tool, not just asked
+for in the prompt.
 
 This is the constraint most worth keeping. You need somewhere that is still yours to think in, and a
 system that occasionally writes to it while you're looking at something is worse than no system,
@@ -71,13 +77,16 @@ the onboarding interview spends a whole round on it.
 
 ## The loop has to be able to stop
 
-Give `/loop` an interval and it becomes a cron job: it runs until you stop it by hand or until it
-expires, and it cannot end itself. Bare `/loop` is self-paced — it picks its own delay after each
-pass, short while a PR is active and long once things go quiet, and it can end the loop entirely.
+A fixed-interval loop is a cron job: it runs until you stop it by hand or until it expires, and it
+cannot end itself. Copilot's own `/loop` is exactly that — an alias of `/every` that fires on a set
+interval — so the loop is driven instead by `board/loop.sh`, which runs one pass at a time and lets the
+pass decide what happens next. Each pass ends on a line the driver reads: `LOOP: wait <seconds>` to
+pace itself — short while a PR is active, long once things go quiet — or `LOOP: stop` to end.
 
 So the protocol has an explicit stop condition written as a list of things that must all be true. When
-they hold, the loop says what it's waiting on and stops. A loop that can't stop isn't autonomous, it's
-expensive.
+they hold, the pass prints `LOOP: stop`, says what it's waiting on, and the driver exits. A loop that
+can't stop isn't autonomous, it's expensive — and keeping the pacing and the stop in the model rather
+than in a fixed interval is the whole reason the loop is a script and not `/every`.
 
 ## Memory, with caps that are enforced
 
