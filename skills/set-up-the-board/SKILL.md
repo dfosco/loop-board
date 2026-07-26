@@ -96,8 +96,9 @@ alone; no manual testing means the loop sets `Ready to Merge` itself and `Testin
 
 Run these and report what failed rather than fixing it silently:
 
-- `copilot` is installed and authenticated (`copilot --version`; `/login` inside a session if not),
-  and `board/dispatch-worker.sh` and `board/loop.sh` are present and executable.
+- `copilot` is installed (`copilot --version`) and a session is signed in — Copilot CLI prompts for
+  the `/login` slash command when it isn't. `board/dispatch-worker.sh` and `board/loop.sh` are present
+  and executable.
 - The worker confinement holds: `dispatch-worker.sh` runs the worker with its working directory in the
   worktree and no `--allow-all-paths`, so a command resolving into the main checkout is refused. The
   whole "never touch my checkout" guarantee rests on that. For OS-level shell confinement too, set

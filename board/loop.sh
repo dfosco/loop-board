@@ -32,7 +32,7 @@ BOARD="${BOARD:-$HOME/board}"
 COPILOT="${COPILOT:-copilot}"
 MAX_WAIT="${MAX_WAIT:-1800}"
 
-[ -d "$BOARD" ] || { echo "loop.sh: board directory not found: $BOARD" >&2; exit 1; }
+[ -d "$BOARD" ] || { echo "loop.sh: board directory not found: $BOARD (set BOARD=<path> to override)" >&2; exit 1; }
 
 # The pass prompt. board/protocol.md and the babysit-prs skill hold the actual
 # rules; here we only ask for one pass and the LOOP: control line.

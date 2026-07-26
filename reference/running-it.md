@@ -65,7 +65,7 @@ a *pass in flight* the way you stop any Copilot session.
 
 | | |
 |---|---|
-| `Ctrl+C` in the `loop.sh` terminal | ends the loop; the current pass finishes or dies with it |
+| `Ctrl+C` in the `loop.sh` terminal | ends the loop and stops the pass running in it |
 | `Esc`, or `Ctrl+C` twice, inside a pass | interrupts the pass that's running |
 | `Ctrl+D` or `/exit` | ends a session you're attached to |
 | reaching `LOOP: stop` | the loop exits on its own once nothing can move without you |
