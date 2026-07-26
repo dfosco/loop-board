@@ -126,7 +126,7 @@ work adds up faster than it looks. Watch the first day.
 
 **It does not review its own work.** The merge gate is whatever your repo already has — your checks,
 your reviewer. If your repo has no automated review, the loop hands changes to you on checks alone and
-says so. It doesn't invent a quality bar.
+says so. It doesn't invent a quality bar, so make sure you have one of your own.
 
 ## Reading
 
