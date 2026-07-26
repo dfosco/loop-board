@@ -62,8 +62,16 @@ run_pass() {
 }
 
 while :; do
-  out="$(run_pass)"
+  # Capture the pass without letting `set -e` kill the loop before we've printed
+  # the output — a failing pass should surface its own error text, then stop.
+  status=0
+  out="$(run_pass)" || status=$?
   printf '%s\n' "$out"
+
+  if [ "$status" -ne 0 ]; then
+    echo "loop.sh: pass exited with status $status; stopping. Re-run once it's resolved." >&2
+    exit "$status"
+  fi
 
   if [ -n "${ONCE:-}" ]; then
     exit 0
