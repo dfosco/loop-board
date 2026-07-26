@@ -85,7 +85,7 @@ fi
 # (.gitignore syntax). Only files that are both ignored and untracked match.
 if [ -r "$REPO/.worktreeinclude" ]; then
   while IFS= read -r pat; do
-    case "$pat" in ''|\#*) continue ;; esac
+    case "$pat" in ''|'#'*) continue ;; esac
     git -C "$REPO" ls-files -o -i --exclude-standard -- "$pat" 2>/dev/null | while IFS= read -r f; do
       [ -e "$REPO/$f" ] || continue
       mkdir -p "$wt/$(dirname "$f")"

@@ -77,6 +77,8 @@ while :; do
       ;;
     "LOOP: wait "*)
       secs="${ctl#LOOP: wait }"
+      # Guard against a malformed sentinel (non-numeric or empty): fall back to a
+      # sane 5-minute wait rather than erroring under `set -u`/arithmetic.
       case "$secs" in *[!0-9]*|'') secs=300 ;; esac
       [ "$secs" -gt "$MAX_WAIT" ] && secs="$MAX_WAIT"
       echo "loop.sh: sleeping ${secs}s before the next pass." >&2
