@@ -60,8 +60,9 @@ done
 
 [ -n "$branch" ] || { echo "dispatch-worker.sh: --branch is required" >&2; exit 2; }
 [ -n "$dispatch_file" ] || { echo "dispatch-worker.sh: --dispatch-file is required" >&2; exit 2; }
-[ -r "$dispatch_file" ] || {
-  echo "dispatch-worker.sh: --dispatch-file must be a readable file: $dispatch_file" >&2; exit 2; }
+[ -e "$dispatch_file" ] || { echo "dispatch-worker.sh: --dispatch-file not found: $dispatch_file" >&2; exit 2; }
+[ -f "$dispatch_file" ] || { echo "dispatch-worker.sh: --dispatch-file is not a regular file: $dispatch_file" >&2; exit 2; }
+[ -r "$dispatch_file" ] || { echo "dispatch-worker.sh: --dispatch-file is not readable: $dispatch_file" >&2; exit 2; }
 git -C "$REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
   echo "dispatch-worker.sh: not a git repository: $REPO" >&2; exit 2; }
 
