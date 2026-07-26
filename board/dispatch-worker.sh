@@ -75,10 +75,11 @@ mkdir -p "$WORKTREES"
 
 if [ -n "$reuse" ]; then
   # Changes-requested / conflict round: pick up the existing branch.
-  [ -d "$wt" ] || git -C "$REPO" worktree add "$wt" "$branch"
+  # git's setup chatter goes to stderr so stdout carries only the worker's block.
+  [ -d "$wt" ] || git -C "$REPO" worktree add "$wt" "$branch" 1>&2
 else
   # New work: a fresh branch off the real default branch.
-  git -C "$REPO" worktree add -b "$branch" "$wt" "$base"
+  git -C "$REPO" worktree add -b "$branch" "$wt" "$base" 1>&2
 fi
 
 # Copy gitignored files a fresh checkout needs, per .worktreeinclude
@@ -95,8 +96,9 @@ if [ -r "$REPO/.worktreeinclude" ]; then
 fi
 
 # Optional install so the worktree is buildable before the worker looks at it.
+# Its output goes to stderr, keeping stdout for the worker's block alone.
 if [ -n "${INSTALL:-}" ]; then
-  ( cd "$wt" && eval "$INSTALL" ) || true
+  ( cd "$wt" && eval "$INSTALL" ) 1>&2 || true
 fi
 
 # Run the worker as a separate, path-scoped Copilot session. Working directory
